@@ -16,14 +16,16 @@ import pyttsx3 as p
 import webbrowser
 import subprocess
 from WikiSearch import *
+from chromehandler import *
 import datetime
-
+import time
+import ctypes
 # setting pyttsx3 for speak functionality
 engine=p.init('sapi5') 
-engine.setProperty('rate',170)
+engine.setProperty('rate',180)
 voices = engine.getProperty('voices') 
-engine.setProperty('voice', voices[1].id)
-
+engine.setProperty('voice', voices[0].id)
+SPI_SETDESKWALLPAPER = 20 
 
 with open("intents.json") as file:
     data = json.load(file)
@@ -122,7 +124,7 @@ def speak(text):
 def getAudio():    
     r=sr.Recognizer()
     with sr.Microphone() as source:
-        r.adjust_for_ambient_noise(source, duration=0.5)
+        r.adjust_for_ambient_noise(source, duration=0.2)
       
         audio=r.listen(source)
         said=""
@@ -135,17 +137,17 @@ def getAudio():
     return said
 
 def chat():
-    print("Start talking with CoroVac (say quit to stop)!")
+    print("Start talking with Thor (say quit to stop)!")
     x = datetime.datetime.now()
     x=x.hour
 
     if x<12 and x>=0:
-        greet="GoodMorning Mate How can I help You"
-        
+        greet="Jarvis reporting..GoodMorning Sir! How can I help You"
+    
     elif x>=12 and x<18:
-        greet="GoodAfternoon Mate How can i help you"
+        greet="Jarvis reporting.. GoodAfternoon Sir!How can i help you"
     else:
-        greet ="GoodEvening Mate How acn I help You"
+        greet ="Jarvis reporting.. GoodEvening Sir! How can I help You"
         
     speak(greet)
     print("User Guide:")
@@ -157,36 +159,101 @@ def chat():
     print(":: Try search Google {{search_key}}")
     print(":: Try open Google Maps")
     while True:     
-            
             text=getAudio()
             print()
             print("You : ",text)
             text=text.lower()
-            if "quit" in text:
-                speak("Goodbye see you again!")
+            
+            if "quit" in text or 'goodbye jarvis' in text or 'go to sleep jarvis' in text  or 'goodbye' in text:
+                speak("Ok Sir!!Goodbye! see you again!")
+                os.system("taskkill /f /im Rainmeter.exe")
+                ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, "C:\\Users\\asus\\Desktop\\156841.jpg" , 3)
                 break
             
+            elif 'great' in text or 'nice' in text  or 'excellent' in text:
+                speak("Thankyou  Sir!!... It's My pleasure")
+            
+            elif  'jarvis pls silent' in text or 'be silent' in text:
+                speak("OK Sir!! As YOu wish")
+                
+                break
+            elif 'describe yourself' in text:
+                response="My name is Thor powered by 2.4giga hertz decacore processor with huge memory of 10 TEra BYtes iinbuilt system UFS2.0 version 3.........My Boss Is Gyanesh he has made my heart....Thanks for his gretafullness"
+                speak(response)
+                
             elif 'open google maps' in text:
+                 speak("opening Google maps Sir")
                  flag=0
                  cnt=0
                  webbrowser.open("www.google.com/maps")
                  
+            elif 'tell my location' in text or 'my location' in text or'current location' in text:
+                speak("Locating Sir")
+                try:
+                    obj.getLocation()
+                except:
+                    obj=ChromeHandler() 
+                    obj.getLocation()
+                #obj=Location()
+                #obj.getLocation()
+                
+            elif 'close google chrome' in text or 'close chrome' in text:
+                speak("Ok Sir")
+                os.system("taskkill /f /im chrome.exe")
+       
+            elif 'in mood of doing coding jarvis' in text or 'mood of doing coding' in text or 'mood of coding' in text or 'in mood of coding' in text or 'mood off coding' in text:
+                speak("Sir shall I open codechef or codeforces")
+                temp=getAudio().lower()
+                print(temp)
+                if 'codechef' in temp:
+                    speak("Sure Sir")
+                    webbrowser.open("https://www.codechef.com")
+                else:
+                    speak("Sure Sir")
+                    webbrowser.open("https://codeforces.com")
+                    
+            elif 'navigate to' in text:
+                list1=list(text.split())
+                print(list1)
+                query=''
+                for i in list1:
+                    if i !='navigate' and i!='to':
+                        query+=i
+                        query+=" "
+                print(query) 
+                query=query.strip()
+                navpath="https://www."+query+".com"
+                print(navpath)
+                try:
+                    obj.navigate(navpath)
+                except:
+                    obj=ChromeHandler() 
+                    obj.navigate(navpath)
+                
+            elif 'do i have any facebook messages' in text or 'facebook messages' in text:
+                speak("Opening facebook Sir")
+                webbrowser.open("https://www.facebook.com")
+                
             elif 'open google' in text:
                 flag=0
                 cnt=0
+                speak("Opening Google Sir")
                 webbrowser.open("www.google.com")
             elif 'open calculator' in text:
                 flag=0
                 cnt=0
                 subprocess.Popen('C:\\Windows\\System32\\calc.exe')
+           
             elif 'open visual studio code' in text:
                 flag=0
                 cnt=0
+                speak("OK Sir! Code Hard")
                 os.startfile("C:/Users/asus/AppData/Local/Programs/Microsoft VS Code/Code.exe")
+               
             elif 'search wikipedia' in text:
                 flag=0
                 cnt=0
-                print("from inside",text)
+                
                 list1=list(text.split())
                 print(list1)
                 query=''
@@ -195,9 +262,12 @@ def chat():
                         query+=i
                         query+=" "
                 print(query) 
-                obj=Wiki()
-                obj.SearchWiki(query)
-                
+                speak("Searching Wikipedia")
+                try:
+                    obj.SearchWiki(query)
+                except:
+                    obj=ChromeHandler()       
+                    obj.SearchWiki(query)
                 
             elif 'search google' in text:
                 flag=0
@@ -208,28 +278,39 @@ def chat():
                     if i !='search' and i!='google':
                         query+=i
                         query+=""
-                obj=Google()
-                obj.GoogSearch(query)
+                speak("Searching Google")  
+                try:
+                   obj.GoogSearch(query)
+                except:
+                   obj=ChromeHandler()
+                   obj.GoogSearch(query)
+                    
+                #obj=Google()
+                #obj.GoogSearch(query)
+                
             elif 'open camera' in text:
                 flag=0
                 cnt=0
+                speak("Done MAte")
                 subprocess.run('start microsoft.windows.camera:', shell=True)
                 
-           
             elif 'weather' in  text:
                 flag=0
                 cnt=0
                 list1=list(text.split())
                 query=''
+                
                 for i in list1:
                     if i !='tell' and i!='weather' and i!='of' and i!='me':
                         query+=i
                         query+=" "
-                try:        
-                    obj=Weather()
+                try:
+                    speak("2 seconds Sir")
                     obj.getWeather(query)
                 except:
-                    pass
+                    obj=ChromeHandler()      
+                    obj.getWeather(query)
+             
             elif 'play music' in text:
                 flag=0
                 cnt=0
@@ -239,8 +320,18 @@ def chat():
                     if i !='play' and i!='music':
                         query+=i
                         query+=" "
-                obj=YouTube()
-                obj.playVideo(query)
+                        
+                speak("playing music Sir")  
+                try:
+                    obj.playVideo(query)
+                except:
+                    obj=ChromeHandler()  
+                    obj.playVideo(query)
+                #obj=YouTube()
+                #obj.playVideo(query)
+                
+            elif text=='':
+                pass
             else:       
                 results = model.predict([bag_of_words(text, words)])[0]
                 results_index = numpy.argmax(results)
@@ -255,12 +346,35 @@ def chat():
             
                     speak(random.choice(responses))
                 else:
+                    speak("Sorry,I dont know that!May be later my knowledge could enhance")
+
+r=sr.Recognizer()
+while(True):
+    with sr.Microphone() as source:
+        r.adjust_for_ambient_noise(source, duration=0.2)
+        audio=r.listen(source)
+        said=""
+        try:
+            print("Recognizing...")
+            said=r.recognize_google(audio)
+            print(said)
+        except:
+            print("sorry can not understand")
+            
+        if "jarvis wake up" in said.lower() or 'wake up' in said.lower() or "wakeup" in said.lower() or 'jarvis' in said.lower():    
+            engine.say("Yes Sir! Starting Engine, Loading resources...Establishing Connection.!")  
+            
+            ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, "C:\\Users\\asus\\Desktop\\download.jfif" , 3)
+            
+            os.startfile("C:/Program Files/Rainmeter/Rainmeter.exe")
+             
+            chat()
+            break 
+'''elif text=="":
                     try:
                         cnt+=1
                     except:
                         cnt=1
-                    if cnt>=3:
-                        speak("No response Mate Goodbyeee See You later")
-                        break
-                    speak("Sorry,I dont know that")
-chat()
+                    if cnt>=8:
+                        speak("No response Mate Goodbyeee.... See You later")
+                        break'''        
